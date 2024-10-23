@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 
-// Custom EventSource implementation with header support
+// Custom EventSource implementation
 class CustomEventSource {
   constructor(url, options = {}) {
     this.url = url;
@@ -15,21 +15,18 @@ class CustomEventSource {
   }
 
   connect() {
-    // Create XHR for EventSource with custom headers
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', this.url, true);
-    xhr.setRequestHeader('Accept', 'text/event-stream');
-    xhr.setRequestHeader('Cache-Control', 'no-cache');
-    xhr.setRequestHeader('x-api-key', '$!aqkhan88!$');
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    
+    xhr.open("GET", this.url, true);
+    xhr.setRequestHeader("Accept", "text/event-stream");
+    xhr.setRequestHeader("Cache-Control", "no-cache");
+    xhr.setRequestHeader("x-api-key", "$!aqkhan88!$");
+    xhr.setRequestHeader("Content-Type", "application/json");
+
     xhr.onreadystatechange = () => {
       if (xhr.readyState === 3) {
-        // Process streaming data
         const data = xhr.responseText;
         this.processStreamData(data);
       } else if (xhr.readyState === 4) {
-        // Connection closed or errored
         if (xhr.status !== 200) {
           if (this.onerror) {
             this.onerror(new Error(`Failed to connect: ${xhr.status}`));
@@ -41,7 +38,7 @@ class CustomEventSource {
 
     xhr.onerror = () => {
       if (this.onerror) {
-        this.onerror(new Error('Connection error'));
+        this.onerror(new Error("Connection error"));
       }
       this.reconnect();
     };
@@ -67,28 +64,27 @@ class CustomEventSource {
   }
 
   processStreamData(data) {
-    const lines = data.split('\n');
-    let event = { data: '', event: 'message' };
+    const lines = data.split("\n");
+    let event = { data: "", event: "message" };
 
-    lines.forEach(line => {
-      if (line.startsWith('data: ')) {
+    lines.forEach((line) => {
+      if (line.startsWith("data: ")) {
         event.data = line.slice(6);
-        // Dispatch the event
         this.dispatchEvent(event);
-      } else if (line.startsWith('event: ')) {
+      } else if (line.startsWith("event: ")) {
         event.event = line.slice(7);
       }
     });
   }
 
   dispatchEvent(event) {
-    if (event.event === 'message' && this.onmessage) {
+    if (event.event === "message" && this.onmessage) {
       this.onmessage({ data: event.data });
     }
 
     const listeners = this.eventListeners.get(event.event);
     if (listeners) {
-      listeners.forEach(listener => {
+      listeners.forEach((listener) => {
         listener({ data: event.data });
       });
     }
@@ -112,7 +108,7 @@ class CustomEventSource {
     this.close();
     this.reconnectTimeout = setTimeout(() => {
       this.connect();
-    }, 5000); // Reconnect after 5 seconds
+    }, 5000);
   }
 
   close() {
@@ -130,6 +126,7 @@ class CustomEventSource {
 const TradingChart = () => {
   const [clientId, setClientId] = useState(null);
   const [isClient, setIsClient] = useState(false);
+  const [tvScriptLoaded, setTvScriptLoaded] = useState(false);
   const chartContainerRef = useRef(null);
   const widgetRef = useRef(null);
   const sourceRef = useRef(null);
@@ -148,46 +145,59 @@ const TradingChart = () => {
     }
 
     onReady(callback) {
-      console.log('[onReady]: Method call');
-      setTimeout(() => callback({
-        supported_resolutions: ['1S', '1', '60'],
-        currency_codes: ['USD'],
-        supports_search: true,
-        has_seconds: true,
-        enabled_features: ['seconds_resolution'],
-      }));
+      console.log("[onReady]: Method call");
+      setTimeout(() =>
+        callback({
+          supported_resolutions: ["1S", "1", "60"],
+          currency_codes: ["USD"],
+          supports_search: true,
+          has_seconds: true,
+          enabled_features: ["seconds_resolution"],
+        })
+      );
     }
 
-    async searchSymbols(userInput, exchange, symbolType, onResultReadyCallback) {
-      onResultReadyCallback([{
-        symbol: this.token_address,
-        full_name: "DADDY TATE",
-        description: "DADDY TATE/USD",
-        exchange: "Raydium AMM V4",
-        ticker: "DADDY",
-        type: "crypto"
-      }]);
+    async searchSymbols(
+      userInput,
+      exchange,
+      symbolType,
+      onResultReadyCallback
+    ) {
+      onResultReadyCallback([
+        {
+          symbol: this.token_address,
+          full_name: "DADDY TATE",
+          description: "DADDY TATE/USD",
+          exchange: "Raydium AMM V4",
+          ticker: "DADDY",
+          type: "crypto",
+        },
+      ]);
     }
 
-    async resolveSymbol(symbolName, onSymbolResolvedCallback, onResolveErrorCallback) {
+    async resolveSymbol(
+      symbolName,
+      onSymbolResolvedCallback,
+      onResolveErrorCallback
+    ) {
       try {
         const symbolInfo = {
-          ticker: 'DADDY',
+          ticker: "DADDY",
           name: this.token_address,
-          description: 'DADDY TATE/USD',
-          type: 'crypto',
-          session: '24x7',
-          timezone: 'Etc/UTC',
-          exchange: 'Raydium AMM V4',
+          description: "DADDY TATE/USD",
+          type: "crypto",
+          session: "24x7",
+          timezone: "Etc/UTC",
+          exchange: "Raydium AMM V4",
           minmov: 1,
           pricescale: 1000000000,
           has_seconds: true,
           has_intraday: true,
-          visible_plots_set: 'ohlcv',
+          visible_plots_set: "ohlcv",
           has_weekly_and_monthly: false,
-          supported_resolutions: ['1S', '1', '60', '1D', '1W'],
+          supported_resolutions: ["1S", "1", "60", "1D", "1W"],
           volume_precision: 2,
-          data_status: 'streaming',
+          data_status: "streaming",
         };
         onSymbolResolvedCallback(symbolInfo);
       } catch (err) {
@@ -198,21 +208,21 @@ const TradingChart = () => {
     subscribeBars(symbolInfo, resolution, onRealtimeCallback, subscriberUID) {
       try {
         const filters = [`transaction:${this.token_address}`];
-        
+
         fetch(`https://api.launchapex.io/v1/events/filter/${clientId}`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': '$!aqkhan88!$'
+            "Content-Type": "application/json",
+            "x-api-key": "$!aqkhan88!$",
           },
-          body: JSON.stringify({ filters })
-        }).then(response => {
+          body: JSON.stringify({ filters }),
+        }).then((response) => {
           if (response.ok) {
             this.eventHandler = (event) => {
               const data = JSON.parse(event.data);
-              data.forEach(t => {
+              data.forEach((t) => {
                 if (this.dedup.has(t.tx)) return;
-                
+
                 this.dedup.set(t.tx, true);
                 const price = t.priceUsd;
                 const volume = t.volume;
@@ -227,7 +237,7 @@ const TradingChart = () => {
                       high: this.h,
                       low: this.l,
                       close: this.c,
-                      volume: this.v
+                      volume: this.v,
                     });
                   }
 
@@ -248,29 +258,41 @@ const TradingChart = () => {
               }
             };
 
-            sourceRef.current?.addEventListener(`transaction:${this.token_address}`, this.eventHandler);
+            sourceRef.current?.addEventListener(
+              `transaction:${this.token_address}`,
+              this.eventHandler
+            );
           }
         });
       } catch (err) {
-        console.error('Error:', err);
+        console.error("Error:", err);
       }
     }
 
     unsubscribeBars(listenerGuid) {
       if (this.eventHandler) {
-        sourceRef.current?.removeEventListener(`transaction:${this.token_address}`, this.eventHandler);
+        sourceRef.current?.removeEventListener(
+          `transaction:${this.token_address}`,
+          this.eventHandler
+        );
         this.eventHandler = null;
       }
 
       fetch(`https://api.launchapex.io/v1/events/filter/clear/${clientId}`, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': '$!aqkhan88!$'
+          "Content-Type": "application/json",
+          "x-api-key": "$!aqkhan88!$",
         },
       });
     }
 
-    getBars(symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
+    getBars(
+      symbolInfo,
+      resolution,
+      periodParams,
+      onHistoryCallback,
+      onErrorCallback
+    ) {
       if (!periodParams.firstDataRequest) {
         onHistoryCallback([], { noData: true });
         return;
@@ -280,24 +302,24 @@ const TradingChart = () => {
 
       fetch(url, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': '$!aqkhan88!$'
-        }
+          "Content-Type": "application/json",
+          "x-api-key": "$!aqkhan88!$",
+        },
       })
-        .then(response => {
+        .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           return response.json();
         })
-        .then(data => {
-          const bars = data.map(bar => ({
+        .then((data) => {
+          const bars = data.map((bar) => ({
             time: new Date(bar.time).getTime(),
             open: bar.ohlcv[0],
             high: bar.ohlcv[1],
             low: bar.ohlcv[2],
             close: bar.ohlcv[3],
-            volume: bar.ohlcv[4]
+            volume: bar.ohlcv[4],
           }));
 
           if (bars.length === 0) {
@@ -315,8 +337,8 @@ const TradingChart = () => {
 
           onHistoryCallback(bars, { noData: false });
         })
-        .catch(error => {
-          console.error('Error fetching bars:', error);
+        .catch((error) => {
+          console.error("Error fetching bars:", error);
           onErrorCallback(error);
         });
     }
@@ -324,30 +346,51 @@ const TradingChart = () => {
 
   useEffect(() => {
     setIsClient(true);
+
+    const script = document.createElement("script");
+    script.src = "/static/charting_library/charting_library.js";
+    script.async = true;
+    script.onload = () => {
+      console.log("TradingView library loaded successfully");
+      setTvScriptLoaded(true);
+    };
+    script.onerror = (error) => {
+      console.error("Error loading TradingView library:", error);
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      if (script.parentNode) {
+        document.head.removeChild(script);
+      }
+    };
   }, []);
 
   useEffect(() => {
     if (!isClient) return;
 
     const initEventSource = () => {
-      const eventSource = new CustomEventSource('https://api.launchapex.io/v1/events');
+      const eventSource = new CustomEventSource(
+        "https://api.launchapex.io/v1/events"
+      );
 
       sourceRef.current = eventSource;
 
       eventSource.onopen = () => {
-        console.log('Connection opened');
+        console.log("EventSource connection opened");
       };
 
       eventSource.onerror = (error) => {
-        console.error('EventSource error:', error);
+        console.error("EventSource error:", error);
       };
 
-      eventSource.addEventListener('connected', (event) => {
+      eventSource.addEventListener("connected", (event) => {
         try {
           const { clientId: newClientId } = JSON.parse(event.data);
+          console.log("Connected with clientId:", newClientId);
           setClientId(newClientId);
         } catch (err) {
-          console.error('Error parsing connected event:', err);
+          console.error("Error parsing connected event:", err);
         }
       });
     };
@@ -355,34 +398,63 @@ const TradingChart = () => {
     initEventSource();
 
     return () => {
-      sourceRef.current?.close();
+      if (sourceRef.current) {
+        sourceRef.current.close();
+      }
     };
   }, [isClient]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!isClient) return;
-
-    const tokenAddress = e.target[0].value;
-
-    if (widgetRef.current) {
-      widgetRef.current.remove();
+    if (!isClient || !tvScriptLoaded) {
+      console.error("TradingView library not loaded yet");
+      return;
     }
 
-    if (typeof window !== 'undefined' && window.TradingView) {
+    const tokenAddress = e.target[0].value;
+    if (!tokenAddress) {
+      console.error("Token address is required");
+      return;
+    }
+
+    try {
+      if (widgetRef.current) {
+        widgetRef.current.remove();
+      }
+
+      const container = document.getElementById("tv_chart_container");
+      if (!container) {
+        console.error("Chart container not found");
+        return;
+      }
+
+      container.innerHTML = "";
+
+      console.log("Initializing widget for token:", tokenAddress);
+
       widgetRef.current = new window.TradingView.widget({
         symbol: tokenAddress,
-        interval: '1S',
-        width: window.innerWidth - 50,
-        height: window.innerHeight - 150,
-        fullscreen: false,
-        container: 'tv_chart_container',
+        interval: "1S",
+        container: "tv_chart_container",
         datafeed: new Datafeed(tokenAddress),
-        library_path: './charting_library/',
-        theme: 'dark',
-        timezone: 'Etc/UTC',
-        debug: true
+        library_path: "/static/charting_library/",
+        theme: "dark",
+        timezone: "Etc/UTC",
+        debug: true,
+        autosize: true,
+        disabled_features: ["use_localstorage_for_settings"],
+        enabled_features: ["study_templates"],
+        charts_storage_url: "https://saveload.tradingview.com",
+        client_id: "tradingview.com",
+        user_id: "public_user",
+        fullscreen: false,
+        width: "100%",
+        height: 600,
       });
+
+      console.log("Widget initialized successfully");
+    } catch (error) {
+      console.error("Error creating widget:", error);
     }
   };
 
@@ -397,7 +469,10 @@ const TradingChart = () => {
   return (
     <div className="p-4">
       <form onSubmit={handleSubmit} className="mb-4">
-        <label htmlFor="tokenAddress" className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor="tokenAddress"
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
           Token Address
         </label>
         <div className="flex gap-2">
@@ -406,16 +481,23 @@ const TradingChart = () => {
             id="tokenAddress"
             className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter token address"
+            required
           />
           <button
             type="submit"
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            disabled={!tvScriptLoaded}
           >
-            Load Chart
+            {tvScriptLoaded ? "Load Chart" : "Loading..."}
           </button>
         </div>
       </form>
-      <div id="tv_chart_container" ref={chartContainerRef} className="border rounded-lg" />
+      <div
+        id="tv_chart_container"
+        ref={chartContainerRef}
+        className="border rounded-lg"
+        style={{ height: "600px" }}
+      />
     </div>
   );
 };
